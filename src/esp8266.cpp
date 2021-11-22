@@ -1,9 +1,10 @@
-#include <Arduino.h>
-#include <WebServer.h>
+#include <Arduino.h>                             
 #include "DHT.h"
 #include "WiFi.h"
+#include "ESPAsyncWebServer.h"
 #include "ESP32_MailClient.h"
 #include "ThingSpeak.h"
+
 
 // data redd
 const char* ssid = "nombre_red";
@@ -28,7 +29,8 @@ bool signupOK = false;
 #include "addons/RTDBHelper.h"
 
 //port serve
-WiFiServer server(80);
+//WiFiServer server(80);
+AsyncWebServer server(80);
 
 //Objects
 SMTPData datosSMTP; //Email
@@ -113,7 +115,7 @@ void setup() {
 void loop() {
 
   //Listen
-  client = server.available();
+  //client = server.available();
 
   if((client) && (Firebase.ready() && signupOK && (millis() - sendDataPrevMillis > 15000 || sendDataPrevMillis == 0))){
     sendDataPrevMillis = millis();
@@ -150,19 +152,34 @@ void loop() {
               Serial.println("Led 2 off");
               led2out = "off";
               digitalWrite(led2, LOW);
-            }else if(header.indexOf("GET /temperature")){
-              //int control_temp = server.arg("n_temp").toInt();
             }
-            
 
-
-
+            //Sensor DHT11
             float t = dht.readTemperature();
             Serial.println("Temperatura -> " + int(t));
             ThingSpeak.setField(1, t); //Send temperature to thingspeak
             float h = dht.readHumidity();
             Serial.println("Humedad ->" + int(h));
             ThingSpeak.setField(2, t); //Send humidity to thingspeak
+            
+            server.on("/temperature", HTTP_GET, [] (AsyncWebServerRequest *request){
+
+                float t = dht.readTemperature();
+
+                int paramsNr = request->params();
+                Serial.println(paramsNr);
+                for (int i = 0; i <paramsNr; i++){
+                    AsyncWebParameter* p = request->getParam(i);
+                    Serial.println("Received temperature");
+                    Serial.println(p->value());
+
+                    int com_temp = p->value().toInt();
+
+                    control_temp(com_temp, t, rele, message);
+
+                }
+                
+            });
 
             //send db temperature
             if(Firebase.RTDB.setFloat(&fbdo, "casa/temperatura",t)){
@@ -183,9 +200,7 @@ void loop() {
               Serial.println("FAILED");
               Serial.println("REASON: " + fbdo.errorReason());
             }
-
-            control_temp(t, rele, message);
-            
+          
             //Page htlm
             client.println("<!DOCTYPE html><html>");
             client.println("<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">");
@@ -326,8 +341,8 @@ void connect_wifi(){
   Serial.println(WiFi.localIP());
 }
 
-void control_temp(double t, int rele, String message){
-  if(t >= 29.2){
+void control_temp(int n_temp, double t, int rele, String message){
+  if(n_temp >= t){
     String message = "Status: ON";
     sendEmail(message);
     Serial.println("Ventilador encendido");
