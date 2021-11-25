@@ -20,10 +20,10 @@ String message;
 
 //detalles correo
 const char* host = "smtp.gmail.com";
-const char* loginEmail = "su correo";
-const char* loginPassword = "su contraseña";
+const char* loginEmail = "maicolh474@gmail.com";
+const char* loginPassword = "maROHer142020";
 const int port = 465;
-const char* accountEmail = "correo_destinatario";
+const char* accountEmail = "maicolh474@gmail.com";
 
 //detalles thingspeak
 unsigned long channelID = 1580456;
@@ -31,10 +31,9 @@ const char* WriteAPIKey = "14O6KM1OFX4KWQB4";
 
 //Asignacion de pines
 const int led1 = 4;
-const int led2 = 5;
 const int dhtPin = 18;
 const int rele = 19;
-const int suelo = 23;
+//const int suelo = 23;
 
 float t,h;
 
@@ -65,12 +64,10 @@ void setup(){
     Serial.begin(115200);
     //estableciendo como salidas
     pinMode(led1, OUTPUT);
-    pinMode(led2, OUTPUT);
     pinMode(rele, OUTPUT);
-    pinMode(suelo, INPUT);
+    //pinMode(suelo, INPUT);
     //escritura estado
     digitalWrite(led1, LOW);
-    digitalWrite(led2, LOW);
     digitalWrite(rele, HIGH);
 
     Serial.print("Conectando a ");
@@ -95,7 +92,7 @@ void loop(){
   delay(5000);
      client = server.available();   // Listen for incoming clients
 
-  if (client || !client) {                             // If a new client connects,
+  if (client) {                             // If a new client connects,
     horaActual = millis();
     horaAnterior = horaActual;
     Serial.println("New Client.");          // print a message out in the serial port
@@ -127,7 +124,9 @@ void loop(){
             ThingSpeak.setField(2,h);
             
             //humedad de suelo
-            int humedad = digitalRead(suelo);
+            //int humedad = digitalRead(suelo);
+            int humedad = analogRead(A4);
+            int hump = map();
             Serial.print("Humedad del suelo -> ");
             Serial.println(humedad);
           
@@ -188,14 +187,14 @@ void loop(){
                       client.println("<div class=\"card-header\"><i class=\"fas fa-tint\"></i> Humedad suelo</div>");
                       client.println("<div class=\"card-body p-3\">");
                       client.println("<h2>");client.println(humedad);client.println("%</h2>");
-                      if( (humedad >= 1) && (humedad <= 30)){
+                      if( (humedad >= 1) && (humedad <= 300)){
                         digitalWrite(led1, HIGH);
                         Serial.println("Humedad baja, sistema de riego activado");
-                        client.println("<div class=\"alert alert-warning\">Humedad baja, sistema de riego activado</div>");
-                      }else if((humedad > 30) && (humedad <= 60)){
+                        client.println("<div class=\"alert alert-warning\">Suelo seco, sistema de riego activado</div>");
+                      }else if((humedad > 300) && (humedad <= 700)){
                         digitalWrite(led1, LOW);
                         Serial.println("Humedad baja, sistema de riego apagado");
-                        client.println("<div class=\"alert alert-success\">Humedad normal, sistema de riego apagado</div>");  
+                        client.println("<div class=\"alert alert-success\">Suelo humedo, sistema de riego apagado</div>");  
                       }
                       client.println("</div>");
                     client.println("</div>");
