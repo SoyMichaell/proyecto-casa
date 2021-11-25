@@ -20,10 +20,10 @@ String message;
 
 //detalles correo
 const char* host = "smtp.gmail.com";
-const char* loginEmail = "maicolh474@gmail.com";
-const char* loginPassword = "maROHer142020";
+const char* loginEmail = "su correo";
+const char* loginPassword = "su contraseña";
 const int port = 465;
-const char* accountEmail = "maicolh474@gmail.com";
+const char* accountEmail = "correo destino";
 
 //detalles thingspeak
 unsigned long channelID = 1580456;
